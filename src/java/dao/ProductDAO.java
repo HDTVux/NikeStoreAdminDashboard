@@ -1,0 +1,78 @@
+package dao;
+
+import model.Product;
+import java.sql.*;
+import java.util.*;
+
+public class ProductDAO {
+    public List<Product> getAllProducts() {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT id, name, price, stock, is_active FROM products ORDER BY id DESC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getDouble("price"));
+                p.setStock(rs.getInt("stock"));
+                p.setActive(rs.getBoolean("is_active"));
+                list.add(p);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    public Product getProductById(int id) {
+        try (Connection conn = DBConnection.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement("SELECT * FROM products WHERE id=?");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("id"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getDouble("price"));
+                p.setStock(rs.getInt("stock"));
+                p.setActive(rs.getBoolean("is_active"));
+                return p;
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+
+    public void insertProduct(Product p) {
+        String sql = "INSERT INTO products (name, price, stock, is_active, size_type) VALUES (?, ?, ?, ?, 'one-size')";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setDouble(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setBoolean(4, p.isActive());
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void updateProduct(Product p) {
+        String sql = "UPDATE products SET name=?, price=?, stock=? WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setDouble(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void toggleActive(int id) {
+        String sql = "UPDATE products SET is_active = NOT is_active WHERE id=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+}
