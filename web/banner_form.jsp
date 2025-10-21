@@ -2,68 +2,206 @@
 <%@ page import="model.Banner" %>
 <html>
     <head>
-        <title>Banner form</title>
+        <title>Banner Form - Nike Admin</title>
         <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-        <style>.content{
-            margin-left:220px;
-            padding:20px;
-        }</style>
+        <link rel="stylesheet" href="assets/css/admin-dashboard.css">
+
+        <style>
+            body {
+                background: #f6f7fb;
+                font-family: "Poppins", "Segoe UI", sans-serif;
+                color: #222;
+            }
+            .content {
+                margin-left: 240px;
+                padding: 32px 40px;
+            }
+            h4 {
+                font-weight: 600;
+                margin-bottom: 25px;
+                letter-spacing: 0.5px;
+            }
+            form {
+                background: #fff;
+                padding: 25px 30px;
+                border-radius: 14px;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            }
+            .form-label {
+                font-weight: 500;
+                color: #333;
+            }
+            .form-control {
+                border-radius: 8px;
+                border: 1px solid #ccc;
+                transition: 0.2s;
+            }
+            .form-control:focus {
+                border-color: #111;
+                box-shadow: 0 0 0 0.15rem rgba(0,0,0,0.2);
+            }
+            .btn-dark {
+                background-color: #111;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+            }
+            .btn-dark:hover {
+                background-color: #222;
+            }
+            .btn-secondary {
+                border-radius: 8px;
+            }
+
+            /* Thumbnail preview */
+            .thumb-wrapper {
+                margin-top: 15px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }
+            .thumb {
+                width: 320px;
+                height: 160px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 2px solid #ccc;
+                background-color: #eee;
+                transition: 0.25s;
+            }
+            .thumb:hover {
+                border-color: #111;
+                transform: scale(1.02);
+            }
+            .upload-zone {
+                border: 2px dashed #aaa;
+                border-radius: 10px;
+                background: #fafafa;
+                padding: 20px;
+                text-align: center;
+                color: #777;
+                font-size: 14px;
+                transition: 0.3s;
+            }
+            .upload-zone:hover {
+                border-color: #111;
+                color: #111;
+                background: #f1f1f1;
+            }
+            .form-check-label {
+                font-weight: 500;
+            }
+        </style>
     </head>
     <body>
         <%@ include file="includes/sidebar.jsp" %>
-        <%@ include file="includes/header.jsp" %>
         <%
           Banner b = (Banner) request.getAttribute("banner");
           boolean editing = b != null;
         %>
+
         <div class="content">
-            <h4><%= editing? "Sửa banner #"+b.getId() : "Thêm banner" %></h4>
-            <form action="banners" method="post" class="mt-3">
-                <input type="hidden" name="id" value="<%= editing? b.getId() : "" %>">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label>Tiêu đề</label>
-                        <input name="title" class="form-control" value="<%= editing && b.getTitle()!=null? b.getTitle() : "" %>">
+            <h4><%= editing ? "✏️ Edit Banner #" + b.getId() : "➕ Add New Banner" %></h4>
+
+            <form action="BannerServlet" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<%= editing ? b.getId() : "" %>">
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Title</label>
+                        <input name="title" class="form-control"
+                               value="<%= editing && b.getTitle()!=null? b.getTitle() : "" %>" required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Phụ đề</label>
-                        <input name="subtitle" class="form-control" value="<%= editing && b.getSubtitle()!=null? b.getSubtitle() : "" %>">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Image URL (ví dụ: uploads/banners/tenfile.jpg)</label>
-                        <input name="image_url" class="form-control" required
-                               value="<%= editing && b.getImageUrl()!=null ? b.getImageUrl().replace("http://localhost/", "") : "" %>">
+                    <div class="col-md-6">
+                        <label class="form-label">Subtitle</label>
+                        <input name="subtitle" class="form-control"
+                               value="<%= editing && b.getSubtitle()!=null? b.getSubtitle() : "" %>">
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label>Deeplink</label>
-                        <input name="deeplink" class="form-control" value="<%= editing && b.getDeeplink()!=null? b.getDeeplink() : "" %>">
+                    <div class="col-md-6">
+                        <label class="form-label">Image URL (relative path)</label>
+                        <input name="image_url" class="form-control"
+                               value="<%= editing && b.getImageUrl()!=null ? b.getImageUrl().replace("http://localhost/","") : "" %>">
+                        <small class="text-muted">e.g. uploads/banners/sample.jpg</small>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label>Thứ tự</label>
-                        <input type="number" name="sort_order" class="form-control" value="<%= editing && b.getSortOrder()!=null? b.getSortOrder() : "" %>">
-                    </div>
-                    <div class="col-md-3 mb-3 d-flex align-items-end">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="is_active" <%= editing && b.isActive()? "checked": (!editing? "checked":"") %> >
-                            <label class="form-check-label">Kích hoạt</label>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Upload New Image</label>
+                        <div class="upload-zone">
+                            <input type="file" name="image_file" accept="image/*" onchange="previewFile(this)">
+                            <p class="mt-2 mb-0">Click to upload or drag an image here</p>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label>Bắt đầu</label>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Deeplink</label>
+                        <input name="deeplink" class="form-control"
+                               value="<%= editing && b.getDeeplink()!=null? b.getDeeplink() : "" %>">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sort Order</label>
+                        <input type="number" name="sort_order" class="form-control"
+                               value="<%= editing && b.getSortOrder()!=null? b.getSortOrder() : "" %>">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active"
+                                   <%= editing ? (b.isActive()?"checked":"") : "checked" %>>
+                            <label class="form-check-label">Active</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Start Time</label>
                         <input type="datetime-local" name="starts_at" class="form-control"
                                value="<%= (editing && b.getStartsAt()!=null)? b.getStartsAt().toLocalDateTime().toString().replace(' ','T') : "" %>">
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <label>Kết thúc</label>
+                    <div class="col-md-3">
+                        <label class="form-label">End Time</label>
                         <input type="datetime-local" name="ends_at" class="form-control"
                                value="<%= (editing && b.getEndsAt()!=null)? b.getEndsAt().toLocalDateTime().toString().replace(' ','T') : "" %>">
                     </div>
                 </div>
-                <button class="btn btn-dark">Lưu</button>
-                <a href="banners" class="btn btn-secondary">Hủy</a>
+
+                <div class="thumb-wrapper">
+                    <% String previewSrc = (editing && b.getImageUrl()!=null) ? b.getImageUrl() : ""; %>
+                    <div>
+                        <label class="form-label mb-2">Preview</label><br>
+                        <img id="preview" class="thumb" 
+                             src="<%= previewSrc %>" 
+                             style="<%= previewSrc.isEmpty() ? "display:none;" : "" %>">
+                    </div>
+
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-dark">💾 Save</button>
+                    <a href="BannerServlet" class="btn btn-secondary ms-2">Cancel</a>
+                </div>
             </form>
         </div>
+
         <script src="assets/js/bootstrap.bundle.min.js"></script>
+        <script>
+                                function previewFile(input) {
+                                    if (input.files && input.files[0]) {
+                                        const reader = new FileReader();
+                                        reader.onload = e => document.getElementById('preview').src = e.target.result;
+                                        reader.readAsDataURL(input.files[0]);
+                                    }
+                                }
+                                function previewFile(input) {
+                                    if (input.files && input.files[0]) {
+                                        const reader = new FileReader();
+                                        reader.onload = e => {
+                                            const img = document.getElementById('preview');
+                                            img.src = e.target.result;
+                                            img.style.display = 'block';
+                                        };
+                                        reader.readAsDataURL(input.files[0]);
+                                    }
+                                }
+
+        </script>
     </body>
 </html>
