@@ -159,4 +159,100 @@ public List<Order> listAll() {
         }
         return list;
     }
+    public List<Order> getOrdersFiltered(String status, String email, int page, int pageSize) {
+    List<Order> list = new ArrayList<>();
+    int offset = (page - 1) * pageSize;
+    StringBuilder sql = new StringBuilder("""
+        SELECT o.id, o.user_id, u.email AS user_email,
+               o.status, o.total_price, o.shipping_address,
+               o.payment_method, o.shipping_fee, o.subtotal, o.created_at
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE 1=1
+    """);
+    List<Object> params = new ArrayList<>();
+    if (status != null && !status.isEmpty() && !"all".equals(status)) {
+        sql.append(" AND o.status = ? ");
+        params.add(status);
+    }
+    if (email != null && !email.isEmpty()) {
+        sql.append(" AND u.email LIKE ? ");
+        params.add("%" + email + "%");
+    }
+    sql.append("ORDER BY o.created_at DESC LIMIT ? OFFSET ?");
+    params.add(pageSize);
+    params.add(offset);
+
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Order o = new Order();
+            o.setId(rs.getInt("id"));
+            o.setUserId(rs.getInt("user_id"));
+            o.setUserEmail(rs.getString("user_email"));
+            o.setStatus(rs.getString("status"));
+            o.setTotalPrice(rs.getDouble("total_price"));
+            o.setShippingAddress(rs.getString("shipping_address"));
+            o.setPaymentMethod(rs.getString("payment_method"));
+            o.setShippingFee(rs.getDouble("shipping_fee"));
+            o.setSubtotal(rs.getDouble("subtotal"));
+            o.setCreatedAt(rs.getTimestamp("created_at"));
+            list.add(o);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
+
+// Đếm số đơn phù hợp filter
+public int countOrdersFiltered(String status, String email) {
+    StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE 1=1
+    """);
+    List<Object> params = new ArrayList<>();
+    if (status != null && !status.isEmpty() && !"all".equals(status)) {
+        sql.append(" AND o.status = ? ");
+        params.add(status);
+    }
+    if (email != null && !email.isEmpty()) {
+        sql.append(" AND u.email LIKE ? ");
+        params.add("%" + email + "%");
+    }
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return 0;
+}
+// Update payment status by order_id
+public void updatePaymentStatus(int orderId, String status) {
+    // Map order status to payment status
+    String paymentStatus = "pending";
+    if ("paid".equals(status)) paymentStatus = "success";
+    else if ("cancelled".equals(status)) paymentStatus = "failed";
+    else paymentStatus = "pending";
+
+    String sql = "UPDATE payments SET status=? WHERE order_id=?";
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        ps.setString(1, paymentStatus);
+        ps.setInt(2, orderId);
+        ps.executeUpdate();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 }

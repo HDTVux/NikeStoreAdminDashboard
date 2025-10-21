@@ -75,4 +75,54 @@ public class ProductDAO {
             ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
+    // Đếm tổng số sản phẩm
+public int countProducts() {
+    String sql = "SELECT COUNT(*) FROM products";
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) return rs.getInt(1);
+    } catch (Exception e) { e.printStackTrace(); }
+    return 0;
+}
+
+// Lấy danh sách sản phẩm có phân trang
+public List<Product> getProductsPaginated(int page, int pageSize) {
+    List<Product> list = new ArrayList<>();
+    int offset = (page - 1) * pageSize;
+    String sql = "SELECT id, name, price, stock, is_active FROM products ORDER BY id DESC LIMIT ? OFFSET ?";
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        ps.setInt(1, pageSize);
+        ps.setInt(2, offset);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Product p = new Product();
+            p.setId(rs.getInt("id"));
+            p.setName(rs.getString("name"));
+            p.setPrice(rs.getDouble("price"));
+            p.setStock(rs.getInt("stock"));
+            p.setActive(rs.getBoolean("is_active"));
+            list.add(p);
+        }
+    } catch (Exception e) { e.printStackTrace(); }
+    return list;
+}
+public int insertProductAndReturnId(Product p) {
+    String sql = "INSERT INTO products (name, price, stock, is_active, size_type) VALUES (?, ?, ?, ?, 'one-size')";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        ps.setString(1, p.getName());
+        ps.setDouble(2, p.getPrice());
+        ps.setInt(3, p.getStock());
+        ps.setBoolean(4, p.isActive());
+        ps.executeUpdate();
+        ResultSet rs = ps.getGeneratedKeys();
+        if (rs.next()) return rs.getInt(1);
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return -1;
+}
+
 }
