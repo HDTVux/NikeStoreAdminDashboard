@@ -15,7 +15,7 @@
     <a href="banners?action=new" class="btn btn-dark">+ Add Banner</a>
   </div>
 
-  <table class="table table-striped align-middle">
+  <table class="table table-dark mt-3">
     <thead>
       <tr><th>ID</th><th>Image</th><th>Title</th><th>Active</th><th>Start-End</th><th>Actions</th></tr>
     </thead>

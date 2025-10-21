@@ -1,9 +1,9 @@
 
 <div class="sidebar">
   <div>
-    <img src="assets/img/logo_nike_white.png" class="logo" alt="Nike Logo">
+    <img src="assets/img/images.png" class="logo" alt="Nike Logo">
     <ul class="nav mt-4">
-      <li><a href="dashboard.jsp" class="<%= request.getRequestURI().contains("dashboard") ? "active" : "" %>">? Dashboard</a></li>
+      <li><a href="DashboardServlet" class="<%= request.getRequestURI().contains("dashboard") ? "active" : "" %>">? Dashboard</a></li>
       <li><a href="OrderServlet" class="<%= request.getRequestURI().contains("orders") ? "active" : "" %>">? Orders</a></li>
       <li><a href="ProductServlet" class="<%= request.getRequestURI().contains("products") ? "active" : "" %>">? Products</a></li>
       <li><a href="BannerServlet" class="<%= request.getRequestURI().contains("banners") ? "active" : "" %>">? Banners</a></li>

@@ -7,34 +7,40 @@ import java.util.*;
 
 public class OrderDAO {
 
-  public List<Order> listAll(){
-    String sql = """
-      SELECT o.*, u.email AS user_email
-      FROM orders o
-      LEFT JOIN users u ON u.id = o.user_id
-      ORDER BY o.id DESC
-      """;
+public List<Order> listAll() {
     List<Order> list = new ArrayList<>();
+    String sql = """
+        SELECT o.id, o.user_id, u.email AS user_email,
+               o.status, o.total_price, o.shipping_address,
+               o.payment_method, o.shipping_fee, o.subtotal, o.created_at
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        ORDER BY o.created_at DESC
+    """;
     try (Connection c = DBConnection.getConnection();
          PreparedStatement ps = c.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()){
-      while(rs.next()){
-        Order o = new Order();
-        o.setId(rs.getInt("id"));
-        o.setUserId(rs.getInt("user_id"));
-        o.setStatus(rs.getString("status"));
-        o.setTotalPrice(rs.getDouble("total_price"));
-        o.setShippingAddress(rs.getString("shipping_address"));
-        o.setCreatedAt(rs.getTimestamp("created_at"));
-        o.setPaymentMethod(rs.getString("payment_method"));
-        o.setShippingFee(rs.getDouble("shipping_fee"));
-        o.setSubtotal(rs.getDouble("subtotal"));
-        o.setUserEmail(rs.getString("user_email"));
-        list.add(o);
-      }
-    }catch(Exception e){ e.printStackTrace(); }
+         ResultSet rs = ps.executeQuery()) {
+
+        while (rs.next()) {
+            Order o = new Order();
+            o.setId(rs.getInt("id"));
+            o.setUserId(rs.getInt("user_id"));
+            o.setUserEmail(rs.getString("user_email"));
+            o.setStatus(rs.getString("status"));
+            o.setTotalPrice(rs.getDouble("total_price"));
+            o.setShippingAddress(rs.getString("shipping_address"));
+            o.setPaymentMethod(rs.getString("payment_method"));
+            o.setShippingFee(rs.getDouble("shipping_fee"));
+            o.setSubtotal(rs.getDouble("subtotal"));
+            o.setCreatedAt(rs.getTimestamp("created_at"));
+            list.add(o);
+        }
+        System.out.println(">>> Loaded " + list.size() + " orders from DB");
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
     return list;
-  }
+}
 
   public Order findWithItems(int orderId){
     Order o = null;
@@ -102,4 +108,55 @@ public class OrderDAO {
       ps.executeUpdate();
     }catch(Exception e){ e.printStackTrace(); }
   }
+   // Đếm tổng số đơn hàng
+    public int countOrders() {
+        String sql = "SELECT COUNT(*) FROM orders";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // Lấy danh sách đơn hàng có phân trang, JOIN user để có email
+    public List<Order> getOrdersPaginated(int page, int pageSize) {
+        List<Order> list = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        String sql = """
+            SELECT o.id, o.user_id, u.email AS user_email,
+                   o.status, o.total_price, o.shipping_address,
+                   o.payment_method, o.shipping_fee, o.subtotal, o.created_at
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+            LIMIT ? OFFSET ?
+        """;
+
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setId(rs.getInt("id"));
+                o.setUserId(rs.getInt("user_id"));
+                o.setUserEmail(rs.getString("user_email"));
+                o.setStatus(rs.getString("status"));
+                o.setTotalPrice(rs.getDouble("total_price"));
+                o.setShippingAddress(rs.getString("shipping_address"));
+                o.setPaymentMethod(rs.getString("payment_method"));
+                o.setShippingFee(rs.getDouble("shipping_fee"));
+                o.setSubtotal(rs.getDouble("subtotal"));
+                o.setCreatedAt(rs.getTimestamp("created_at"));
+                list.add(o);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }

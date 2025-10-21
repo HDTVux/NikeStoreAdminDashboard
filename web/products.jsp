@@ -15,7 +15,7 @@
     <a href="products?action=new" class="btn btn-dark">+ Add Product</a>
   </div>
 
-  <table class="table table-striped">
+  <table class="table table-dark mt-3">
     <thead>
       <tr>
         <th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Active</th><th>Actions</th>

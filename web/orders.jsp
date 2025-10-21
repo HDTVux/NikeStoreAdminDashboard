@@ -10,39 +10,68 @@
 <%@ include file="includes/sidebar.jsp" %>
 
 <div class="content">
-  <div class="header-bar">
-    <h2>Orders</h2>
+  <h2 class="mb-4 text-white">Orders</h2>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-hover w-100">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Shipping Fee</th>
+          <th>Subtotal</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%
+          List<Order> orders = (List<Order>) request.getAttribute("orders");
+          if (orders != null && !orders.isEmpty()) {
+              for (Order o : orders) {
+        %>
+          <tr>
+            <td><%= o.getId() %></td>
+            <td><%= o.getUserEmail() %></td>
+            <td><%= o.getStatus() %></td>
+            <td><%= String.format("%,.2f USD", o.getTotalPrice()) %></td>
+            <td><%= o.getPaymentMethod() %></td>
+            <td><%= String.format("%,.2f", o.getShippingFee()) %></td>
+            <td><%= String.format("%,.2f", o.getSubtotal()) %></td>
+            <td><%= o.getCreatedAt() %></td>
+          </tr>
+        <%
+              }
+          } else {
+        %>
+          <tr><td colspan="8">No orders found.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
   </div>
 
-  <table class="table table-striped">
-    <thead>
-      <tr><th>ID</th><th>User ID</th><th>Status</th><th>Total</th><th>Payment</th><th>Created</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      <%
-        List<Order> list = (List<Order>) request.getAttribute("orders");
-        if (list != null && !list.isEmpty()) {
-          for (Order o : list) {
-      %>
-      <tr>
-        <td><%= o.getId() %></td>
-        <td><%= o.getUserId() %></td>
-        <td><%= o.getStatus() %></td>
-        <td>$<%= o.getTotalPrice() %></td>
-        <td><%= o.getPaymentMethod() %></td>
-        <td><%= o.getCreatedAt() %></td>
-        <td>
-          <a href="orders?action=view&id=<%=o.getId()%>" class="btn btn-sm btn-outline-dark">View</a>
-          <a href="orders?action=cancel&id=<%=o.getId()%>" class="btn btn-sm btn-danger">Cancel</a>
-        </td>
-      </tr>
-      <% } } else { %>
-      <tr><td colspan="7" class="text-center text-muted">No orders found</td></tr>
-      <% } %>
-    </tbody>
-  </table>
+  <!-- Pagination -->
+  <ul class="pagination">
+    <%
+      int currentPage = (int) request.getAttribute("currentPage");
+      int totalPages = (int) request.getAttribute("totalPages");
+      if (currentPage > 1) {
+    %>
+      <li><a href="?page=<%= currentPage - 1 %>">Prev</a></li>
+    <% } %>
+    <%
+      for (int i = 1; i <= totalPages; i++) {
+    %>
+      <li><a href="?page=<%= i %>" class="<%= (i == currentPage) ? "active" : "" %>"><%= i %></a></li>
+    <% } %>
+    <%
+      if (currentPage < totalPages) {
+    %>
+      <li><a href="?page=<%= currentPage + 1 %>">Next</a></li>
+    <% } %>
+  </ul>
 </div>
-
-<script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ body {
   top: 0;
   width: 220px;
   height: 100vh;
-  background-color: #111;
+  background-color: black;
   padding: 20px 15px;
   display: flex;
   flex-direction: column;
@@ -132,8 +132,8 @@ body {
   gap: 20px;
 }
 .ring {
-  width: 100px;
-  height: 100px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: conic-gradient(#111 calc(var(--percent) * 1%), #eee 0);
   display: flex;
@@ -167,3 +167,130 @@ body {
 .btn-dark:hover {
   background-color: #222;
 }
+.chart-box h5 {
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+canvas {
+  width: 100% !important;
+}
+
+.card-stat {
+  cursor: default;
+}
+
+/* ========================
+   FIX TOP SALES SIZE & CENTER
+======================== */
+.chart-box.top-sales-box {
+  text-align: center;
+  padding: 20px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-sales-canvas {
+  width: 300px;   /* chỉnh nhỏ hơn nếu muốn */
+  height: 300px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.top-sales-canvas canvas {
+  width: 300px !important;
+  height: 300px !important;
+}
+
+.chart-box.top-sales-box h5 {
+  margin-bottom: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Thu nhỏ phần legend (chú thích dưới chart) */
+#topSalesChart + .chartjs-size-monitor + .chartjs-legend,
+.chartjs-legend {
+  text-align: left !important;
+  font-size: 13px !important;
+  color: #444;
+  margin-top: 8px;
+}
+
+.sidebar .logo {
+  width: 100%;          /* 👈 chỉnh kích thước logo tại đây */
+  height: auto;
+  margin-bottom: 30px;
+  object-fit: contain;   /* giữ tỉ lệ gốc, không méo */
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar .logo:hover {
+  filter: brightness(1.3); /* làm sáng khi hover */
+  transform: scale(1.05);  /* phóng to nhẹ khi hover */
+}
+
+/* ========================
+   DARK TABLE STYLE + PAGINATION
+======================== */
+.table-dark {
+  width: 100%;
+  background-color: #111;
+  color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  border: none;
+}
+
+.table-dark th {
+  background-color: #1a1a1a;
+  color: #bbb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+}
+
+.table-dark td {
+  background-color: #181818;
+  border-bottom: 1px solid #222;
+  font-size: 14px;
+}
+
+.table-dark tr:hover td {
+  background-color: #222;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  list-style: none;
+  padding: 0;
+}
+
+.pagination li {
+  margin: 0 5px;
+}
+
+.pagination a {
+  color: #fff;
+  background-color: #333;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.pagination a.active {
+  background-color: #fff;
+  color: #000;
+  font-weight: bold;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #555;
+}
+
