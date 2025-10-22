@@ -56,4 +56,17 @@
         <servlet-name>UserServlet</servlet-name>
         <url-pattern>/UserServlet</url-pattern>
     </servlet-mapping>
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>util.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/DashboardServlet</url-pattern>
+        <url-pattern>/OrderServlet</url-pattern>
+        <url-pattern>/ProductServlet</url-pattern>
+        <url-pattern>/BannerServlet</url-pattern>
+        <url-pattern>/UserServlet</url-pattern>
+    </filter-mapping>
+
 </web-app>

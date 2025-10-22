@@ -95,4 +95,25 @@ public class UserDAO {
             ps.executeUpdate();
         } catch(Exception e){ e.printStackTrace(); }
     }
+    
+    public User getUserByEmailAndPassword(String email, String password) {
+    String sql = "SELECT * FROM users WHERE email=? AND password=?";
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        ps.setString(1, email);
+        ps.setString(2, password);
+        ResultSet rs = ps.executeQuery();
+        if(rs.next()) {
+            User u = new User();
+            u.setId(rs.getInt("id"));
+            u.setEmail(rs.getString("email"));
+            u.setUsername(rs.getString("username"));
+            u.setRole(rs.getString("role")); // THÊM field role vào model.User
+            // ... các trường khác nếu cần
+            return u;
+        }
+    } catch(Exception e){ e.printStackTrace(); }
+    return null;
+}
+
 }

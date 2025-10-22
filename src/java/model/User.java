@@ -7,6 +7,7 @@ public class User {
     private String username;
     private String password;
     private boolean active;
+    private String role;
 
     // Getters/Setters
     public int getId() {
@@ -48,4 +49,13 @@ public class User {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+    
 }

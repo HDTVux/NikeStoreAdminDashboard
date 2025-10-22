@@ -1,42 +1,40 @@
 package controller;
 
-import dao.DBConnection;
-import java.io.IOException;
-import java.sql.*;
+import dao.UserDAO;
+import model.User;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import java.io.IOException;
 
 public class LoginServlet extends HttpServlet {
+    private final UserDAO dao = new UserDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("login.jsp").forward(req, resp);
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
-try (Connection conn = DBConnection.getConnection()) {
-    System.out.println("✅ Đã kết nối MySQL thành công!");
-    PreparedStatement ps = conn.prepareStatement(
-        "SELECT * FROM users WHERE email=? AND password=? AND role='admin'"
-    );
-    ps.setString(1, email);
-    ps.setString(2, password);
-    ResultSet rs = ps.executeQuery();
-
-    if (rs.next()) {
-        System.out.println("✅ Đăng nhập thành công cho user: " + rs.getString("username"));
-        HttpSession session = req.getSession();
-        session.setAttribute("adminUser", rs.getString("username"));
-        resp.sendRedirect("products");
-    } else {
-        System.out.println("❌ Sai email hoặc mật khẩu!");
-        req.setAttribute("error", "Sai tài khoản hoặc mật khẩu!");
-        req.getRequestDispatcher("jsp/login.jsp").forward(req, resp);
-    }
-} catch (SQLException e) {
-    e.printStackTrace();
-    throw new ServletException("❌ Lỗi kết nối MySQL: " + e.getMessage());
-}
-
+        User user = dao.getUserByEmailAndPassword(email, password);
+        if(user == null) {
+            req.setAttribute("error", "Invalid email or password!");
+            req.getRequestDispatcher("login.jsp").forward(req, resp);
+            return;
+        }
+        // Chỉ cho phép admin
+        if(!"admin".equalsIgnoreCase(user.getRole())) {
+            req.setAttribute("error", "Permission denied! Only admin can access.");
+            req.getRequestDispatcher("login.jsp").forward(req, resp);
+            return;
+        }
+        // Đăng nhập thành công
+        req.getSession().setAttribute("authUser", user);
+        resp.sendRedirect("DashboardServlet");
     }
 }
