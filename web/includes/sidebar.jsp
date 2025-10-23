@@ -6,14 +6,14 @@
             top: 0;
             width: 220px;
             height: 100vh;
-            background: #111;
+            background: black;
             padding: 24px 12px 0 12px;
             display: flex;
             flex-direction: column;
             z-index: 100;
         }
         .sidebar .logo {
-            width: 110px;
+            width: 90%;
             display: block;
             margin: 0 auto 26px auto;
         }

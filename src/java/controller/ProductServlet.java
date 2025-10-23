@@ -2,8 +2,11 @@ package controller;
 
 import dao.ProductDAO;
 import dao.ProductImageDAO;
+import dao.ProductVariantDAO; // THÊM DAO NÀY
 import model.Product;
 import model.ProductImage;
+import model.ProductVariant; // THÊM MODEL NÀY
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.*;
@@ -16,6 +19,7 @@ public class ProductServlet extends HttpServlet {
 
     private final ProductDAO dao = new ProductDAO();
     private final ProductImageDAO imgDao = new ProductImageDAO();
+    private final ProductVariantDAO variantDao = new ProductVariantDAO(); // THÊM DAO NÀY
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -37,8 +41,10 @@ public class ProductServlet extends HttpServlet {
                 int editId = Integer.parseInt(req.getParameter("id"));
                 Product p = dao.getProductById(editId);
                 List<ProductImage> images = imgDao.getImagesByProductId(editId);
+                List<ProductVariant> variants = variantDao.getVariantsByProductId(editId); // LẤY VARIANTS
                 req.setAttribute("product", p);
                 req.setAttribute("images", images);
+                req.setAttribute("variants", variants); // ĐẨY RA JSP
                 req.getRequestDispatcher("product_form.jsp").forward(req, resp);
                 break;
 
@@ -53,10 +59,11 @@ public class ProductServlet extends HttpServlet {
                 resp.sendRedirect("ProductServlet?action=edit&id=" + req.getParameter("productId"));
                 break;
             case "new":
-            req.setAttribute("product", null);
-            req.setAttribute("images", null);
-            req.getRequestDispatcher("product_form.jsp").forward(req, resp);
-            break;
+                req.setAttribute("product", null);
+                req.setAttribute("images", null);
+                req.setAttribute("variants", null);
+                req.getRequestDispatcher("product_form.jsp").forward(req, resp);
+                break;
 
             default:
                 int page = 1;
@@ -109,23 +116,65 @@ public class ProductServlet extends HttpServlet {
         String name = req.getParameter("name");
         String price = req.getParameter("price");
         String stock = req.getParameter("stock");
+        String sizeType = req.getParameter("sizeType"); // LẤY sizeType
 
         Product p = new Product();
         p.setName(name);
         p.setPrice(Double.parseDouble(price));
         p.setStock(Integer.parseInt(stock));
         p.setActive(true);
+        p.setSizeType(sizeType);
 
         if (idStr == null || idStr.isEmpty()) {
             // 🔹 Thêm mới
             int newId = dao.insertProductAndReturnId(p);
+
+            // Nếu có variants
+            if (!"one-size".equals(sizeType)) {
+                String[] sizes = req.getParameterValues("variantSize");
+                String[] stocks = req.getParameterValues("variantStock");
+                String[] prices = req.getParameterValues("variantPrice");
+                if (sizes != null) {
+                    for (int i = 0; i < sizes.length; i++) {
+                        ProductVariant v = new ProductVariant();
+                        v.setProductId(newId);
+                        v.setSize(sizes[i]);
+                        v.setStock(Integer.parseInt(stocks[i]));
+                        v.setPrice(Double.parseDouble(prices[i]));
+                        variantDao.insertVariant(v);
+                    }
+                }
+            }
+
             resp.sendRedirect("ProductServlet?action=edit&id=" + newId);
         } else {
             // 🔹 Cập nhật
-            p.setId(Integer.parseInt(idStr));
+            int prodId = Integer.parseInt(idStr);
+            p.setId(prodId);
             dao.updateProduct(p);
-            resp.sendRedirect("ProductServlet");
+
+            // Xử lý variants nếu là shoe/clothing: XÓA hết rồi thêm lại cho đơn giản
+            if (!"one-size".equals(sizeType)) {
+                variantDao.deleteVariantsByProductId(prodId);
+                String[] sizes = req.getParameterValues("variantSize");
+                String[] stocks = req.getParameterValues("variantStock");
+                String[] prices = req.getParameterValues("variantPrice");
+                if (sizes != null) {
+                    for (int i = 0; i < sizes.length; i++) {
+                        ProductVariant v = new ProductVariant();
+                        v.setProductId(prodId);
+                        v.setSize(sizes[i]);
+                        v.setStock(Integer.parseInt(stocks[i]));
+                        v.setPrice(Double.parseDouble(prices[i]));
+                        variantDao.insertVariant(v);
+                    }
+                }
+            } else {
+                // Nếu chuyển về one-size thì xoá hết variants
+                variantDao.deleteVariantsByProductId(prodId);
+            }
+
+            resp.sendRedirect("ProductServlet?action=edit&id=" + prodId);
         }
     }
-
 }
