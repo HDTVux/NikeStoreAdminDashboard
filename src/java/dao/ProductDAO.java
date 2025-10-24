@@ -7,7 +7,7 @@ import java.util.*;
 public class ProductDAO {
     public List<Product> getAllProducts() {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT id, name, price, stock, is_active, size_type FROM products ORDER BY id DESC";
+        String sql = "SELECT id, name, price, stock, is_active, size_type, category_id, description FROM products ORDER BY id DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -20,6 +20,8 @@ public class ProductDAO {
                 p.setStock(rs.getInt("stock"));
                 p.setActive(rs.getBoolean("is_active"));
                 p.setSizeType(rs.getString("size_type"));
+                p.setCategoryId(rs.getInt("category_id"));
+                p.setDescription(rs.getString("description"));
                 list.add(p);
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -39,6 +41,8 @@ public class ProductDAO {
                 p.setStock(rs.getInt("stock"));
                 p.setActive(rs.getBoolean("is_active"));
                 p.setSizeType(rs.getString("size_type"));
+                p.setCategoryId(rs.getInt("category_id"));
+                p.setDescription(rs.getString("description"));
                 return p;
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -46,7 +50,7 @@ public class ProductDAO {
     }
 
     public void insertProduct(Product p) {
-        String sql = "INSERT INTO products (name, price, stock, is_active, size_type) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO products (name, price, stock, is_active, size_type, category_id, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getName());
@@ -54,19 +58,23 @@ public class ProductDAO {
             ps.setInt(3, p.getStock());
             ps.setBoolean(4, p.isActive());
             ps.setString(5, p.getSizeType());
+            ps.setString(6, p.getDescription());
+            ps.setInt(7, p.getCategoryId());
             ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
     public void updateProduct(Product p) {
-        String sql = "UPDATE products SET name=?, price=?, stock=?, size_type=? WHERE id=?";
+        String sql = "UPDATE products SET name=?, price=?, stock=?, size_type=?, category_id=?, description=? WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getName());
             ps.setDouble(2, p.getPrice());
             ps.setInt(3, p.getStock());
             ps.setString(4, p.getSizeType());
-            ps.setInt(5, p.getId());
+            ps.setInt(5, p.getCategoryId());
+            ps.setString(6, p.getDescription());
+            ps.setInt(7, p.getId());
             ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
@@ -113,21 +121,24 @@ public class ProductDAO {
         return list;
     }
 
-    public int insertProductAndReturnId(Product p) {
-        String sql = "INSERT INTO products (name, price, stock, is_active, size_type) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, p.getName());
-            ps.setDouble(2, p.getPrice());
-            ps.setInt(3, p.getStock());
-            ps.setBoolean(4, p.isActive());
-            ps.setString(5, p.getSizeType());
-            ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return -1;
+public int insertProductAndReturnId(Product p) {
+    String sql = "INSERT INTO products (name, description, price, stock, is_active, size_type, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        ps.setString(1, p.getName());
+        ps.setString(2, p.getDescription());
+        ps.setDouble(3, p.getPrice());
+        ps.setInt(4, p.getStock());
+        ps.setBoolean(5, p.isActive());
+        ps.setString(6, p.getSizeType());
+        ps.setInt(7, p.getCategoryId());
+        ps.executeUpdate();
+        ResultSet rs = ps.getGeneratedKeys();
+        if (rs.next()) return rs.getInt(1);
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return -1;
+}
+
 }

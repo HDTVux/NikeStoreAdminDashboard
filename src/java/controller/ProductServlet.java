@@ -1,5 +1,6 @@
 package controller;
 
+import dao.CategoryDAO;
 import dao.ProductDAO;
 import dao.ProductImageDAO;
 import dao.ProductVariantDAO; // THÊM DAO NÀY
@@ -13,6 +14,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.List;
 import java.util.UUID;
+import model.Category;
 
 @jakarta.servlet.annotation.MultipartConfig
 public class ProductServlet extends HttpServlet {
@@ -20,6 +22,7 @@ public class ProductServlet extends HttpServlet {
     private final ProductDAO dao = new ProductDAO();
     private final ProductImageDAO imgDao = new ProductImageDAO();
     private final ProductVariantDAO variantDao = new ProductVariantDAO(); // THÊM DAO NÀY
+    private final CategoryDAO catDao = new CategoryDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -41,10 +44,12 @@ public class ProductServlet extends HttpServlet {
                 int editId = Integer.parseInt(req.getParameter("id"));
                 Product p = dao.getProductById(editId);
                 List<ProductImage> images = imgDao.getImagesByProductId(editId);
+                List<Category> categories = catDao.getAllCategories();
                 List<ProductVariant> variants = variantDao.getVariantsByProductId(editId); // LẤY VARIANTS
                 req.setAttribute("product", p);
                 req.setAttribute("images", images);
-                req.setAttribute("variants", variants); // ĐẨY RA JSP
+                req.setAttribute("variants", variants); 
+                req.setAttribute("categories", categories);
                 req.getRequestDispatcher("product_form.jsp").forward(req, resp);
                 break;
 
@@ -59,9 +64,11 @@ public class ProductServlet extends HttpServlet {
                 resp.sendRedirect("ProductServlet?action=edit&id=" + req.getParameter("productId"));
                 break;
             case "new":
+                List<Category> categoriesNew = catDao.getAllCategories();
                 req.setAttribute("product", null);
                 req.setAttribute("images", null);
                 req.setAttribute("variants", null);
+                req.setAttribute("categories", categoriesNew);
                 req.getRequestDispatcher("product_form.jsp").forward(req, resp);
                 break;
 
@@ -117,14 +124,29 @@ public class ProductServlet extends HttpServlet {
         String price = req.getParameter("price");
         String stock = req.getParameter("stock");
         String sizeType = req.getParameter("sizeType"); // LẤY sizeType
+        String catIdStr = req.getParameter("categoryId");
+        String description = req.getParameter("description");
+        int catId = (catIdStr != null && !catIdStr.isEmpty()) ? Integer.parseInt(catIdStr) : 0;
 
         Product p = new Product();
         p.setName(name);
         p.setPrice(Double.parseDouble(price));
-        p.setStock(Integer.parseInt(stock));
+        if ("one-size".equals(sizeType)) {
+            // chỉ parse stock khi là one-size
+            try {
+                p.setStock(Integer.parseInt(stock));
+            } catch (Exception e) {
+                p.setStock(0);
+            }
+        } else {
+            // với shoe/clothing, mặc định stock = 0 (vì sẽ lấy từ variants)
+            p.setStock(0);
+        }
         p.setActive(true);
         p.setSizeType(sizeType);
-
+        p.setCategoryId(catId);
+        p.setDescription(description);
+        
         if (idStr == null || idStr.isEmpty()) {
             // 🔹 Thêm mới
             int newId = dao.insertProductAndReturnId(p);

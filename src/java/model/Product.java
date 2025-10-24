@@ -7,7 +7,25 @@ public class Product {
     private double price;
     private int stock;
     private boolean active;
-    private String sizeType; 
+    private String sizeType;
+    private int categoryId;
+    private String description;
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
 
     public String getSizeType() {
         return sizeType;

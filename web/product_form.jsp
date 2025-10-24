@@ -1,9 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="model.Product, model.ProductImage, model.ProductVariant, java.util.*" %>
+<%@ page import="model.Category, java.util.*" %>
 <%
   Product p = (Product) request.getAttribute("product");
   List<ProductImage> images = (List<ProductImage>) request.getAttribute("images");
   List<ProductVariant> variants = (List<ProductVariant>) request.getAttribute("variants");
+  List<Category> categories = (List<Category>) request.getAttribute("categories");
   boolean isEdit = p != null;
 %>
 <html>
@@ -125,9 +127,24 @@
                             <label class="form-label">Name</label>
                             <input name="name" class="form-control" value="<%= isEdit?p.getName():"" %>" required>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3"><%= isEdit?p.getDescription():"" %></textarea>
+                        </div>
+
                         <div class="col-md-4">
                             <label class="form-label">Price</label>
                             <input name="price" type="number" step="0.01" class="form-control" value="<%= isEdit?p.getPrice():"" %>" required>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label class="form-label">Category</label>
+                            <select name="categoryId" class="form-select" required>
+                                <% if(categories != null) for(Category cat : categories) { %>
+                                <option value="<%=cat.getId()%>" <%= isEdit && p.getCategoryId()==cat.getId() ? "selected" : "" %>>
+                                    <%=cat.getName()%>
+                                </option>
+                                <% } %>
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Size Type</label>
@@ -152,7 +169,7 @@
                             </thead>
                             <tbody id="variantTable">
                                 <% if(isEdit && variants != null) {
-                              for(model.ProductVariant v : variants) { %>
+                          for(ProductVariant v : variants) { %>
                                 <tr>
                                     <td><input name="variantSize" value="<%= v.getSize() %>" class="form-control" required></td>
                                     <td><input name="variantStock" value="<%= v.getStock() %>" type="number" class="form-control" required></td>
@@ -176,7 +193,7 @@
                 <div class="section-title mb-3">Product Images</div>
                 <div class="images-list">
                     <% if(images != null && !images.isEmpty()) {
-                for(ProductImage img : images) { %>
+            for(ProductImage img : images) { %>
                     <div class="img-box">
                         <img src="http://localhost/<%= img.getImageUrl() %>" class="<%= img.isMain() ? "main-img" : "" %>" onerror="this.src='assets/img/noimg.jpg'">
                         <div class="img-actions">
@@ -213,11 +230,11 @@
                                     var tbody = document.getElementById("variantTable");
                                     var row = document.createElement("tr");
                                     row.innerHTML = `
-            <td><input name="variantSize" class="form-control" required></td>
-            <td><input name="variantStock" type="number" class="form-control" required></td>
-            <td><input name="variantPrice" type="number" class="form-control" required></td>
-            <td><button type="button" class="btn btn-danger" onclick="removeVariantRow(this)">X</button></td>
-          `;
+                    <td><input name="variantSize" class="form-control" required></td>
+                    <td><input name="variantStock" type="number" class="form-control" required></td>
+                    <td><input name="variantPrice" type="number" class="form-control" required></td>
+                    <td><button type="button" class="btn btn-danger" onclick="removeVariantRow(this)">X</button></td>
+                `;
                                     tbody.appendChild(row);
                                 }
                                 function removeVariantRow(btn) {
