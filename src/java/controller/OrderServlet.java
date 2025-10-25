@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class OrderServlet extends HttpServlet {
+
     private final OrderDAO dao = new OrderDAO();
     private static final int PAGE_SIZE = 10;
 
@@ -18,7 +19,9 @@ public class OrderServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String action = req.getParameter("action");
-        if (action == null) action = "list";
+        if (action == null) {
+            action = "list";
+        }
 
         switch (action) {
             case "view":
@@ -31,15 +34,22 @@ public class OrderServlet extends HttpServlet {
                 // Lấy filter
                 String status = req.getParameter("status");
                 String email = req.getParameter("email");
-                if (status == null) status = "all";
-                if (email == null) email = "";
+                if (status == null) {
+                    status = "all";
+                }
+                if (email == null) {
+                    email = "";
+                }
 
                 // Trang hiện tại
                 int page = 1;
                 try {
                     String p = req.getParameter("page");
-                    if (p != null) page = Integer.parseInt(p);
-                } catch (NumberFormatException ignored) {}
+                    if (p != null) {
+                        page = Integer.parseInt(p);
+                    }
+                } catch (NumberFormatException ignored) {
+                }
 
                 int totalOrders = dao.countOrdersFiltered(status, email);
                 int totalPages = (int) Math.ceil((double) totalOrders / PAGE_SIZE);
@@ -63,6 +73,10 @@ public class OrderServlet extends HttpServlet {
             int orderId = Integer.parseInt(idStr);
             dao.updateStatus(orderId, status);
             dao.updatePaymentStatus(orderId, status);
+            if ("cancelled".equals(status)) {
+                dao.restoreStockWhenCancelled(orderId);
+            }
+
             // Gửi mail thông báo trạng thái mới
             Order order = dao.findWithItems(orderId);
             String to = order.getUserEmail();

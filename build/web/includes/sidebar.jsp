@@ -69,6 +69,7 @@
             <li><a href="ProductServlet" class="<%= request.getRequestURI().contains("products") ? "active" : "" %>">Products</a></li>
             <li><a href="BannerServlet" class="<%= request.getRequestURI().contains("banners") ? "active" : "" %>">Banners</a></li>
             <li><a href="UserServlet" class="<%= request.getRequestURI().contains("users") ? "active" : "" %>">Users</a></li>
+            <li><a href="CategoryServlet" class="<%= request.getRequestURI().contains("users") ? "active" : "" %>">Categories</a></li>
         </ul>
         <a href="LogoutServlet" class="btn-logout">Log Out</a>
     </div>

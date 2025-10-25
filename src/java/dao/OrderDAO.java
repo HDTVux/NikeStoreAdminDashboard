@@ -7,9 +7,9 @@ import java.util.*;
 
 public class OrderDAO {
 
-public List<Order> listAll() {
-    List<Order> list = new ArrayList<>();
-    String sql = """
+    public List<Order> listAll() {
+        List<Order> list = new ArrayList<>();
+        String sql = """
         SELECT o.id, o.user_id, u.email AS user_email,
                o.status, o.total_price, o.shipping_address,
                o.payment_method, o.shipping_fee, o.subtotal, o.created_at
@@ -17,104 +17,106 @@ public List<Order> listAll() {
         JOIN users u ON o.user_id = u.id
         ORDER BY o.created_at DESC
     """;
-    try (Connection c = DBConnection.getConnection();
-         PreparedStatement ps = c.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
-        while (rs.next()) {
-            Order o = new Order();
-            o.setId(rs.getInt("id"));
-            o.setUserId(rs.getInt("user_id"));
-            o.setUserEmail(rs.getString("user_email"));
-            o.setStatus(rs.getString("status"));
-            o.setTotalPrice(rs.getDouble("total_price"));
-            o.setShippingAddress(rs.getString("shipping_address"));
-            o.setPaymentMethod(rs.getString("payment_method"));
-            o.setShippingFee(rs.getDouble("shipping_fee"));
-            o.setSubtotal(rs.getDouble("subtotal"));
-            o.setCreatedAt(rs.getTimestamp("created_at"));
-            list.add(o);
+            while (rs.next()) {
+                Order o = new Order();
+                o.setId(rs.getInt("id"));
+                o.setUserId(rs.getInt("user_id"));
+                o.setUserEmail(rs.getString("user_email"));
+                o.setStatus(rs.getString("status"));
+                o.setTotalPrice(rs.getDouble("total_price"));
+                o.setShippingAddress(rs.getString("shipping_address"));
+                o.setPaymentMethod(rs.getString("payment_method"));
+                o.setShippingFee(rs.getDouble("shipping_fee"));
+                o.setSubtotal(rs.getDouble("subtotal"));
+                o.setCreatedAt(rs.getTimestamp("created_at"));
+                list.add(o);
+            }
+            System.out.println(">>> Loaded " + list.size() + " orders from DB");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        System.out.println(">>> Loaded " + list.size() + " orders from DB");
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
 
-  public Order findWithItems(int orderId){
-    Order o = null;
-    String osql = """
+    public Order findWithItems(int orderId) {
+        Order o = null;
+        String osql = """
       SELECT o.*, u.email AS user_email
       FROM orders o
       LEFT JOIN users u ON u.id=o.user_id
       WHERE o.id=?
       """;
-    String isql = """
+        String isql = """
       SELECT oi.*, p.name AS product_name
       FROM order_items oi
       LEFT JOIN products p ON p.id = oi.product_id
       WHERE oi.order_id=?
       """;
-    try (Connection c = DBConnection.getConnection()){
-      try (PreparedStatement ps = c.prepareStatement(osql)){
-        ps.setInt(1, orderId);
-        try(ResultSet rs = ps.executeQuery()){
-          if (rs.next()){
-            o = new Order();
-            o.setId(rs.getInt("id"));
-            o.setUserId(rs.getInt("user_id"));
-            o.setStatus(rs.getString("status"));
-            o.setTotalPrice(rs.getDouble("total_price"));
-            o.setShippingAddress(rs.getString("shipping_address"));
-            o.setCreatedAt(rs.getTimestamp("created_at"));
-            o.setPaymentMethod(rs.getString("payment_method"));
-            o.setShippingFee(rs.getDouble("shipping_fee"));
-            o.setSubtotal(rs.getDouble("subtotal"));
-            o.setUserEmail(rs.getString("user_email"));
-          }
-        }
-      }
-      if (o != null){
-        List<OrderItem> items = new ArrayList<>();
-        try (PreparedStatement ps = c.prepareStatement(isql)){
-          ps.setInt(1, orderId);
-          try(ResultSet rs = ps.executeQuery()){
-            while(rs.next()){
-              OrderItem it = new OrderItem();
-              it.setId(rs.getInt("id"));
-              it.setOrderId(orderId);
-              it.setProductId(rs.getInt("product_id"));
-              it.setVariantId((Integer)rs.getObject("variant_id"));
-              it.setQuantity(rs.getInt("quantity"));
-              it.setPrice(rs.getDouble("price"));
-              it.setProductName(rs.getString("product_name"));
-              items.add(it);
+        try (Connection c = DBConnection.getConnection()) {
+            try (PreparedStatement ps = c.prepareStatement(osql)) {
+                ps.setInt(1, orderId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        o = new Order();
+                        o.setId(rs.getInt("id"));
+                        o.setUserId(rs.getInt("user_id"));
+                        o.setStatus(rs.getString("status"));
+                        o.setTotalPrice(rs.getDouble("total_price"));
+                        o.setShippingAddress(rs.getString("shipping_address"));
+                        o.setCreatedAt(rs.getTimestamp("created_at"));
+                        o.setPaymentMethod(rs.getString("payment_method"));
+                        o.setShippingFee(rs.getDouble("shipping_fee"));
+                        o.setSubtotal(rs.getDouble("subtotal"));
+                        o.setUserEmail(rs.getString("user_email"));
+                    }
+                }
             }
-          }
+            if (o != null) {
+                List<OrderItem> items = new ArrayList<>();
+                try (PreparedStatement ps = c.prepareStatement(isql)) {
+                    ps.setInt(1, orderId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            OrderItem it = new OrderItem();
+                            it.setId(rs.getInt("id"));
+                            it.setOrderId(orderId);
+                            it.setProductId(rs.getInt("product_id"));
+                            it.setVariantId((Integer) rs.getObject("variant_id"));
+                            it.setQuantity(rs.getInt("quantity"));
+                            it.setPrice(rs.getDouble("price"));
+                            it.setProductName(rs.getString("product_name"));
+                            items.add(it);
+                        }
+                    }
+                }
+                o.setItems(items);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        o.setItems(items);
-      }
-    }catch(Exception e){ e.printStackTrace(); }
-    return o;
-  }
+        return o;
+    }
 
-  public void updateStatus(int orderId, String status){
-    String sql = "UPDATE orders SET status=? WHERE id=?";
-    try (Connection c = DBConnection.getConnection();
-         PreparedStatement ps = c.prepareStatement(sql)){
-      ps.setString(1, status);
-      ps.setInt(2, orderId);
-      ps.executeUpdate();
-    }catch(Exception e){ e.printStackTrace(); }
-  }
-   // Đếm tổng số đơn hàng
+    public void updateStatus(int orderId, String status) {
+        String sql = "UPDATE orders SET status=? WHERE id=?";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    // Đếm tổng số đơn hàng
+
     public int countOrders() {
         String sql = "SELECT COUNT(*) FROM orders";
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -135,8 +137,7 @@ public List<Order> listAll() {
             LIMIT ? OFFSET ?
         """;
 
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, pageSize);
             ps.setInt(2, offset);
             ResultSet rs = ps.executeQuery();
@@ -159,10 +160,11 @@ public List<Order> listAll() {
         }
         return list;
     }
+
     public List<Order> getOrdersFiltered(String status, String email, int page, int pageSize) {
-    List<Order> list = new ArrayList<>();
-    int offset = (page - 1) * pageSize;
-    StringBuilder sql = new StringBuilder("""
+        List<Order> list = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        StringBuilder sql = new StringBuilder("""
         SELECT o.id, o.user_id, u.email AS user_email,
                o.status, o.total_price, o.shipping_address,
                o.payment_method, o.shipping_fee, o.subtotal, o.created_at
@@ -170,89 +172,127 @@ public List<Order> listAll() {
         JOIN users u ON o.user_id = u.id
         WHERE 1=1
     """);
-    List<Object> params = new ArrayList<>();
-    if (status != null && !status.isEmpty() && !"all".equals(status)) {
-        sql.append(" AND o.status = ? ");
-        params.add(status);
-    }
-    if (email != null && !email.isEmpty()) {
-        sql.append(" AND u.email LIKE ? ");
-        params.add("%" + email + "%");
-    }
-    sql.append("ORDER BY o.created_at DESC LIMIT ? OFFSET ?");
-    params.add(pageSize);
-    params.add(offset);
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty() && !"all".equals(status)) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
+        }
+        if (email != null && !email.isEmpty()) {
+            sql.append(" AND u.email LIKE ? ");
+            params.add("%" + email + "%");
+        }
+        sql.append("ORDER BY o.created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add(offset);
 
-    try (Connection c = DBConnection.getConnection();
-         PreparedStatement ps = c.prepareStatement(sql.toString())) {
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setId(rs.getInt("id"));
+                o.setUserId(rs.getInt("user_id"));
+                o.setUserEmail(rs.getString("user_email"));
+                o.setStatus(rs.getString("status"));
+                o.setTotalPrice(rs.getDouble("total_price"));
+                o.setShippingAddress(rs.getString("shipping_address"));
+                o.setPaymentMethod(rs.getString("payment_method"));
+                o.setShippingFee(rs.getDouble("shipping_fee"));
+                o.setSubtotal(rs.getDouble("subtotal"));
+                o.setCreatedAt(rs.getTimestamp("created_at"));
+                list.add(o);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Order o = new Order();
-            o.setId(rs.getInt("id"));
-            o.setUserId(rs.getInt("user_id"));
-            o.setUserEmail(rs.getString("user_email"));
-            o.setStatus(rs.getString("status"));
-            o.setTotalPrice(rs.getDouble("total_price"));
-            o.setShippingAddress(rs.getString("shipping_address"));
-            o.setPaymentMethod(rs.getString("payment_method"));
-            o.setShippingFee(rs.getDouble("shipping_fee"));
-            o.setSubtotal(rs.getDouble("subtotal"));
-            o.setCreatedAt(rs.getTimestamp("created_at"));
-            list.add(o);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
 
 // Đếm số đơn phù hợp filter
-public int countOrdersFiltered(String status, String email) {
-    StringBuilder sql = new StringBuilder("""
+    public int countOrdersFiltered(String status, String email) {
+        StringBuilder sql = new StringBuilder("""
         SELECT COUNT(*) FROM orders o
         JOIN users u ON o.user_id = u.id
         WHERE 1=1
     """);
-    List<Object> params = new ArrayList<>();
-    if (status != null && !status.isEmpty() && !"all".equals(status)) {
-        sql.append(" AND o.status = ? ");
-        params.add(status);
-    }
-    if (email != null && !email.isEmpty()) {
-        sql.append(" AND u.email LIKE ? ");
-        params.add("%" + email + "%");
-    }
-    try (Connection c = DBConnection.getConnection();
-         PreparedStatement ps = c.prepareStatement(sql.toString())) {
-        for (int i = 0; i < params.size(); i++) {
-            ps.setObject(i + 1, params.get(i));
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty() && !"all".equals(status)) {
+            sql.append(" AND o.status = ? ");
+            params.add(status);
         }
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1);
-    } catch (Exception e) {
-        e.printStackTrace();
+        if (email != null && !email.isEmpty()) {
+            sql.append(" AND u.email LIKE ? ");
+            params.add("%" + email + "%");
+        }
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
-    return 0;
-}
 // Update payment status by order_id
-public void updatePaymentStatus(int orderId, String status) {
-    // Map order status to payment status
-    String paymentStatus = "pending";
-    if ("paid".equals(status)) paymentStatus = "success";
-    else if ("cancelled".equals(status)) paymentStatus = "failed";
-    else paymentStatus = "pending";
 
-    String sql = "UPDATE payments SET status=? WHERE order_id=?";
-    try (Connection c = DBConnection.getConnection();
-         PreparedStatement ps = c.prepareStatement(sql)) {
-        ps.setString(1, paymentStatus);
-        ps.setInt(2, orderId);
-        ps.executeUpdate();
-    } catch (Exception e) {
-        e.printStackTrace();
+    public void updatePaymentStatus(int orderId, String status) {
+        // Map order status to payment status
+        String paymentStatus = "pending";
+        if ("paid".equals(status)) {
+            paymentStatus = "success";
+        } else if ("cancelled".equals(status)) {
+            paymentStatus = "failed";
+        } else {
+            paymentStatus = "pending";
+        }
+
+        String sql = "UPDATE payments SET status=? WHERE order_id=?";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, paymentStatus);
+            ps.setInt(2, orderId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-}
+
+    public void restoreStockWhenCancelled(int orderId) {
+        String sqlItems = "SELECT product_id, variant_id, quantity FROM order_items WHERE order_id = ?";
+        try (Connection c = DBConnection.getConnection(); PreparedStatement ps = c.prepareStatement(sqlItems)) {
+            ps.setInt(1, orderId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int productId = rs.getInt("product_id");
+                Integer variantId = (Integer) rs.getObject("variant_id");
+                int quantity = rs.getInt("quantity");
+
+                // Nếu có variant_id thì cập nhật bảng product_variants
+                if (variantId != null) {
+                    try (PreparedStatement psVar = c.prepareStatement(
+                            "UPDATE product_variants SET stock = stock + ? WHERE id = ?")) {
+                        psVar.setInt(1, quantity);
+                        psVar.setInt(2, variantId);
+                        psVar.executeUpdate();
+                    }
+                } else {
+                    // Nếu sản phẩm không có variant thì cập nhật bảng products
+                    try (PreparedStatement psProd = c.prepareStatement(
+                            "UPDATE products SET stock = stock + ? WHERE id = ?")) {
+                        psProd.setInt(1, quantity);
+                        psProd.setInt(2, productId);
+                        psProd.executeUpdate();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
