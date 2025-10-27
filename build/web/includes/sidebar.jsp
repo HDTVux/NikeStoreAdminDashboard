@@ -6,7 +6,7 @@
             top: 0;
             width: 220px;
             height: 100vh;
-            background: black;
+            background: #000;
             padding: 24px 12px 0 12px;
             display: flex;
             flex-direction: column;
@@ -34,7 +34,7 @@
             background: none;
             text-decoration: none;
             font-weight: 500;
-            transition: background 0.19s, color 0.19s;
+            transition: background 0.2s, color 0.2s;
             letter-spacing: 0.5px;
         }
         .sidebar .nav a:hover,
@@ -53,24 +53,40 @@
             text-align: center;
             font-weight: 500;
             text-decoration: none;
-            transition: background 0.19s;
+            transition: background 0.2s;
         }
         .btn-logout:hover {
             background: #ff4141;
             color: #fff;
         }
-
     </style>
+
     <div>
         <img src="assets/img/images.png" class="logo" alt="Nike Logo">
+
         <ul class="nav mt-4">
-            <li><a href="DashboardServlet" class="<%= request.getRequestURI().contains("dashboard") ? "active" : "" %>">Dashboard</a></li>
-            <li><a href="OrderServlet" class="<%= request.getRequestURI().contains("orders") ? "active" : "" %>">Orders</a></li>
-            <li><a href="ProductServlet" class="<%= request.getRequestURI().contains("products") ? "active" : "" %>">Products</a></li>
-            <li><a href="BannerServlet" class="<%= request.getRequestURI().contains("banners") ? "active" : "" %>">Banners</a></li>
-            <li><a href="UserServlet" class="<%= request.getRequestURI().contains("users") ? "active" : "" %>">Users</a></li>
-            <li><a href="CategoryServlet" class="<%= request.getRequestURI().contains("users") ? "active" : "" %>">Categories</a></li>
+            <li><a href="DashboardServlet"
+                   class="<%= request.getRequestURI().contains("DashboardServlet") ? "active" : "" %>">Dashboard</a></li>
+
+            <li><a href="OrderServlet"
+                   class="<%= request.getRequestURI().contains("OrderServlet") ? "active" : "" %>">Orders</a></li>
+
+            <li><a href="ProductServlet"
+                   class="<%= request.getRequestURI().contains("ProductServlet") ? "active" : "" %>">Products</a></li>
+
+            <li><a href="BannerServlet"
+                   class="<%= request.getRequestURI().contains("BannerServlet") ? "active" : "" %>">Banners</a></li>
+
+            <li><a href="UserServlet"
+                   class="<%= request.getRequestURI().contains("UserServlet") ? "active" : "" %>">Users</a></li>
+
+            <li><a href="CategoryServlet"
+                   class="<%= request.getRequestURI().contains("CategoryServlet") ? "active" : "" %>">Categories</a></li>
+
+            <li><a href="PromotionServlet"
+                   class="<%= request.getRequestURI().contains("PromotionServlet") ? "active" : "" %>">Promotions</a></li>
         </ul>
+
         <a href="LogoutServlet" class="btn-logout">Log Out</a>
     </div>
 </div>
