@@ -46,13 +46,13 @@
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card-stat negative">
-        <small>LIVE OFFERS</small>
-        <div class="value">
-          <%= request.getAttribute("liveOffers") != null ? request.getAttribute("liveOffers") : 0 %>
-        </div>
-      </div>
+  <div class="card-stat">
+    <small>ACTIVE CUSTOMERS</small>
+    <div class="value">
+      <%= request.getAttribute("totalCustomers") != null ? request.getAttribute("totalCustomers") : 0 %>
     </div>
+  </div>
+</div>
 
   <!-- CHARTS -->
   <div class="row g-4 mb-4">
@@ -74,19 +74,44 @@
   </div>
 
   <!-- ORDERS TABLE -->
-  <div class="chart-box">
-    <h5>Recent Orders</h5>
-    <table class="table table-dark mt-3">
-      <thead>
-        <tr><th>Order ID</th><th>Products</th><th>Amount</th><th>Date</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>4895-403-293-8467</td><td>5</td><td>USD 730.00</td><td>16/04/2017</td></tr>
-        <tr><td>4895-403-293-8468</td><td>3</td><td>USD 390.00</td><td>17/04/2017</td></tr>
-        <tr><td>4895-403-293-8471</td><td>4</td><td>USD 540.00</td><td>18/04/2017</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="chart-box">
+  <h5>Recent Orders</h5>
+  <table class="table table-dark mt-3">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%
+        String json = (String) request.getAttribute("recentOrders");
+        if (json != null && !json.isEmpty()) {
+          org.json.JSONArray arr = new org.json.JSONArray(json);
+          for (int i = 0; i < arr.length(); i++) {
+            org.json.JSONObject o = arr.getJSONObject(i);
+      %>
+      <tr>
+        <td><%= o.getInt("id") %></td>
+        <td><%= o.getString("username") %></td>
+        <td>$<%= String.format("%.2f", o.getDouble("total_price")) %></td>
+        <td><%= o.getString("status").toUpperCase() %></td>
+        <td><%= o.getString("created_at").substring(0, 10) %></td>
+      </tr>
+      <%
+          }
+        } else {
+      %>
+      <tr><td colspan="5">No recent orders found.</td></tr>
+      <%
+        }
+      %>
+    </tbody>
+  </table>
+</div>
 </div>
 
 <!-- Bootstrap + Chart.js -->

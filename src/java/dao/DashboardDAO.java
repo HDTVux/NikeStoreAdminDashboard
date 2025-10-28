@@ -104,4 +104,39 @@ public class DashboardDAO {
         return obj;
     }
     
+    // Tổng số khách hàng đang hoạt động
+    public int getTotalCustomers() {
+        String sql = "SELECT COUNT(*) FROM users WHERE role='customer' AND is_active=1";
+        try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    } 
+    // 5 đơn hàng gần nhất
+public JSONArray getRecentOrders() {
+    JSONArray arr = new JSONArray();
+    String sql = """
+        SELECT o.id, u.username, o.total_price, o.status, o.created_at
+        FROM orders o
+        JOIN users u ON u.id = o.user_id
+        ORDER BY o.created_at DESC
+        LIMIT 5
+    """;
+    try (Connection c = DBConnection.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            JSONObject row = new JSONObject();
+            row.put("id", rs.getInt("id"));
+            row.put("username", rs.getString("username"));
+            row.put("total_price", rs.getDouble("total_price"));
+            row.put("status", rs.getString("status"));
+            row.put("created_at", rs.getTimestamp("created_at").toString());
+            arr.put(row);
+        }
+    } catch (Exception e) { e.printStackTrace(); }
+    return arr;
+}
 }
