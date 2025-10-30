@@ -3,9 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/moi/NikeStoreAdmin/src/java/dao/DashboardDAO.java</file>
-            <file>file:/D:/moi/NikeStoreAdmin/web/dashboard.jsp</file>
-            <file>file:/D:/moi/NikeStoreAdmin/src/java/controller/DashboardServlet.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/web/chat_detail.jsp</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/model/Message.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/web/chat_list.jsp</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/model/Chat.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/controller/ChatListServlet.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/dao/ChatDAO.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/controller/ChatDetailServlet.java</file>
+            <file>file:/D:/moi/NikeStoreAdmin/src/java/MessageDAO.java</file>
         </group>
     </open-files>
 </project-private>

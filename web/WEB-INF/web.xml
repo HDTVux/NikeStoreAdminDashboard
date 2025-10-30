@@ -36,6 +36,14 @@
         <servlet-name>PromotionServlet</servlet-name>
         <servlet-class>controller.PromotionServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ChatListServlet</servlet-name>
+        <servlet-class>controller.ChatListServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ChatDetailServlet</servlet-name>
+        <servlet-class>controller.ChatDetailServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
@@ -83,5 +91,13 @@
     <servlet-mapping>
         <servlet-name>PromotionServlet</servlet-name>
         <url-pattern>/PromotionServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ChatListServlet</servlet-name>
+        <url-pattern>/ChatListServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ChatDetailServlet</servlet-name>
+        <url-pattern>/ChatDetailServlet</url-pattern>
     </servlet-mapping>
 </web-app>

@@ -85,6 +85,8 @@
 
             <li><a href="PromotionServlet"
                    class="<%= request.getRequestURI().contains("PromotionServlet") ? "active" : "" %>">Promotions</a></li>
+            <li><a href="ChatListServlet"
+                   class="<%= request.getRequestURI().contains("ChatListServlet") ? "active" : "" %>">Chat List</a></li>
         </ul>
 
         <a href="LogoutServlet" class="btn-logout">Log Out</a>
