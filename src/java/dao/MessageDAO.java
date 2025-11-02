@@ -3,6 +3,7 @@ package dao;
 import model.Message;
 import java.sql.*;
 import java.util.*;
+import dao.DBConnection;
 
 public class MessageDAO {
 

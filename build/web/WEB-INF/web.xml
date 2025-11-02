@@ -44,6 +44,10 @@
         <servlet-name>ChatDetailServlet</servlet-name>
         <servlet-class>controller.ChatDetailServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>GetMessagesServlet</servlet-name>
+        <servlet-class>controller.GetMessagesServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
@@ -99,5 +103,9 @@
     <servlet-mapping>
         <servlet-name>ChatDetailServlet</servlet-name>
         <url-pattern>/ChatDetailServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GetMessagesServlet</servlet-name>
+        <url-pattern>/GetMessagesServlet</url-pattern>
     </servlet-mapping>
 </web-app>

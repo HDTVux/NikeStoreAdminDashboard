@@ -24,9 +24,9 @@
             }
 
             .chat-wrapper {
-                width: 80%;                 /* chiếm 80% màn hình */
-                max-width: 1000px;          /* không vượt quá 1000px */
-                min-width: 720px;           /* giữ tối thiểu để không quá nhỏ */
+                width: 80%;
+                max-width: 1000px;
+                min-width: 720px;
                 margin: 0 auto;
                 background: #fff;
                 border-radius: 20px;
@@ -36,7 +36,6 @@
                 overflow: hidden;
             }
 
-
             .chat-messages {
                 flex: 1;
                 padding: 20px 24px;
@@ -45,6 +44,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 12px;
+                max-height: 500px;
             }
 
             .bubble {
@@ -69,7 +69,6 @@
                 }
             }
 
-            /* USER MESSAGE (LEFT) */
             .user-msg {
                 align-self: flex-start;
                 background: #e5e6ea;
@@ -77,7 +76,6 @@
                 border-top-left-radius: 6px;
             }
 
-            /* ADMIN MESSAGE (RIGHT) */
             .admin-msg {
                 align-self: flex-end;
                 background: #0078ff;
@@ -99,7 +97,6 @@
                 text-align: right;
             }
 
-            /* CHAT INPUT */
             .chat-input {
                 display: flex;
                 align-items: center;
@@ -137,8 +134,12 @@
             .chat-input button:hover {
                 background: #0061d9;
             }
+            
+            .chat-input button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
 
-            /* Scrollbar mảnh hơn */
             .chat-messages::-webkit-scrollbar {
                 width: 6px;
             }
@@ -155,39 +156,145 @@
 
         <div class="chat-wrapper">
             <div class="chat-messages" id="chatBox">
-                <%
-                  List<model.Message> messages = (List<model.Message>) request.getAttribute("messages");
-                  if (messages != null && !messages.isEmpty()) {
-                    for (model.Message m : messages) {
-                      boolean isAdmin = m.isAdmin();
-                %>
-                <div class="bubble <%= isAdmin ? "admin-msg" : "user-msg" %>">
-                    <div class="sender"><%= isAdmin ? "Admin" : m.getSenderName() %></div>
-                    <div><%= m.getMessage() %></div>
-                    <div class="msg-time"><%= m.getCreatedAt() %></div>
-                </div>
-                <%
-                    }
-                  } else {
-                %>
-                <p style="text-align:center; color:#777;">Chưa có tin nhắn nào.</p>
-                <%
-                  }
-                %>
+                <!-- Messages sẽ được load bằng AJAX -->
             </div>
 
-            <form class="chat-input" method="post" action="ChatDetailServlet">
-                <input type="hidden" name="chat_id" value="<%= request.getAttribute("chatId") %>">
-                <input type="hidden" name="admin_id" value="1"><!-- ID admin đăng nhập -->
-                <input type="text" name="message" placeholder="Nhập tin nhắn..." required>
-                <button type="submit">Gửi</button>
+            <form class="chat-input" id="chatForm" onsubmit="return false;">
+                <input type="hidden" name="chat_id" id="chatId" value="<%= request.getAttribute("chatId") %>">
+                <input type="hidden" name="admin_id" id="adminId" value="<%= session.getAttribute("userId") != null ? session.getAttribute("userId") : "1" %>">
+                <input type="text" name="message" id="messageInput" placeholder="Nhập tin nhắn..." required autocomplete="off">
+                <button type="button" id="sendBtn" onclick="sendMessage()">Gửi</button>
             </form>
         </div>
 
         <script>
-            // Tự động cuộn xuống cuối khung chat
-            const chatBox = document.getElementById('chatBox');
-            chatBox.scrollTop = chatBox.scrollHeight;
+            var chatId = <%= request.getAttribute("chatId") %>;
+            var chatBox = document.getElementById('chatBox');
+            var messageInput = document.getElementById('messageInput');
+            var sendBtn = document.getElementById('sendBtn');
+
+            // Hàm format timestamp
+            function formatTimestamp(timestamp) {
+                var date = new Date(timestamp);
+                return date.toLocaleString('vi-VN');
+            }
+
+            // Hàm tạo HTML cho message
+            function createMessageHTML(msg) {
+                var isAdmin = msg.admin;
+                var bubbleClass = isAdmin ? 'admin-msg' : 'user-msg';
+                var senderName = isAdmin ? 'Admin' : msg.senderName;
+                
+                return '<div class="bubble ' + bubbleClass + '">' +
+                    '<div class="sender">' + senderName + '</div>' +
+                    '<div>' + escapeHtml(msg.message) + '</div>' +
+                    '<div class="msg-time">' + formatTimestamp(msg.createdAt) + '</div>' +
+                    '</div>';
+            }
+            
+            // Escape HTML để tránh XSS
+            function escapeHtml(text) {
+                var map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+
+            // Load messages từ server
+            function loadMessages() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'GetMessagesServlet?chat_id=' + chatId, true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        try {
+                            var messages = JSON.parse(xhr.responseText);
+                            if (messages.length > 0) {
+                                var hasNewMessages = messages.length > chatBox.children.length;
+                                
+                                chatBox.innerHTML = '';
+                                for (var i = 0; i < messages.length; i++) {
+                                    chatBox.innerHTML += createMessageHTML(messages[i]);
+                                }
+                                
+                                if (hasNewMessages) {
+                                    chatBox.scrollTop = chatBox.scrollHeight;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error parsing messages:', e);
+                        }
+                    }
+                };
+                xhr.send();
+            }
+
+            // Gửi tin nhắn
+            function sendMessage() {
+                var message = messageInput.value.trim();
+                if (!message) return;
+                
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Đang gửi...';
+                
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'ChatDetailServlet', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Gửi';
+                        
+                        console.log('Status:', xhr.status);
+                        console.log('Response:', xhr.responseText);
+                        
+                        if (xhr.status == 200) {
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                console.log('Parsed response:', response);
+                                if (response.status === 'success') {
+                                    messageInput.value = '';
+                                    loadMessages();
+                                } else {
+                                    alert('Gửi tin nhắn thất bại: ' + (response.message || 'Unknown error'));
+                                }
+                            } catch (e) {
+                                console.error('Error parsing response:', e);
+                                console.error('Response text:', xhr.responseText);
+                                alert('Lỗi: Server trả về không phải JSON!\n' + xhr.responseText.substring(0, 200));
+                            }
+                        } else {
+                            console.error('HTTP Error:', xhr.status, xhr.responseText);
+                            alert('Lỗi HTTP ' + xhr.status + '!\nKiểm tra Console để biết chi tiết.');
+                        }
+                    }
+                };
+                
+                var adminId = document.getElementById('adminId').value;
+                var params = 'chat_id=' + chatId + 
+                           '&admin_id=' + adminId + 
+                           '&message=' + encodeURIComponent(message);
+                           
+                console.log('Sending params:', params);
+                xhr.send(params);
+            }
+            
+            // Enter để gửi
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Load tin nhắn ban đầu
+            loadMessages();
+
+            // Tự động load tin nhắn mới mỗi 2 giây
+            setInterval(loadMessages, 2000);
         </script>
 
     </body>
