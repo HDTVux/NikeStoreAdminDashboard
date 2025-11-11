@@ -5,9 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/nike_store";
-    private static final String USER = "root";
-    private static final String PASSWORD = ""; // sửa lại nếu bạn có mật khẩu
+    // Đã sửa lại thông tin hosting, giữ nguyên cấu trúc
+    private static final String URL = "jdbc:mysql://202.92.5.23:3306/ylvqitishosting_nike_store";
+    private static final String USER = "ylvqitishosting_hdtvux";
+    private static final String PASSWORD = "Vucoi123!"; 
 
     public static Connection getConnection() throws SQLException {
         try {

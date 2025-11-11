@@ -1,5 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="model.Banner" %>
+
+<%
+    // Domain hosting của bạn
+    String BASE_URL = "https://hdtvux.id.vn/";
+%>
+
 <html>
     <head>
         <title>Banner Form - Nike Admin</title>
@@ -94,10 +100,18 @@
         </style>
     </head>
     <body>
+
         <%@ include file="includes/sidebar.jsp" %>
+
         <%
-          Banner b = (Banner) request.getAttribute("banner");
-          boolean editing = b != null;
+            Banner b = (Banner) request.getAttribute("banner");
+            boolean editing = b != null;
+
+            // Tạo preview ảnh đúng URL Hosting
+            String previewSrc = "";
+            if (editing && b.getImageUrl() != null) {
+                previewSrc = BASE_URL + b.getImageUrl();
+            }
         %>
 
         <div class="content">
@@ -107,11 +121,13 @@
                 <input type="hidden" name="id" value="<%= editing ? b.getId() : "" %>">
 
                 <div class="row g-4">
+
                     <div class="col-md-6">
                         <label class="form-label">Title</label>
                         <input name="title" class="form-control"
                                value="<%= editing && b.getTitle()!=null? b.getTitle() : "" %>" required>
                     </div>
+
                     <div class="col-md-6">
                         <label class="form-label">Subtitle</label>
                         <input name="subtitle" class="form-control"
@@ -121,15 +137,15 @@
                     <div class="col-md-6">
                         <label class="form-label">Image URL (relative path)</label>
                         <input name="image_url" class="form-control"
-                               value="<%= editing && b.getImageUrl()!=null ? b.getImageUrl().replace("http://localhost/","") : "" %>">
-                        <small class="text-muted">e.g. uploads/banners/sample.jpg</small>
+                               value="<%= editing && b.getImageUrl()!=null ? b.getImageUrl() : "" %>">
+                        <small class="text-muted">Ví dụ: uploads/banners/sample.jpg</small>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Upload New Image</label>
                         <div class="upload-zone">
                             <input type="file" name="image_file" accept="image/*" onchange="previewFile(this)">
-                            <p class="mt-2 mb-0">Click to upload or drag an image here</p>
+                            <p class="mt-2 mb-0">Click để chọn ảnh</p>
                         </div>
                     </div>
 
@@ -138,11 +154,13 @@
                         <input name="deeplink" class="form-control"
                                value="<%= editing && b.getDeeplink()!=null? b.getDeeplink() : "" %>">
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Sort Order</label>
                         <input type="number" name="sort_order" class="form-control"
                                value="<%= editing && b.getSortOrder()!=null? b.getSortOrder() : "" %>">
                     </div>
+
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="is_active"
@@ -156,52 +174,49 @@
                         <input type="datetime-local" name="starts_at" class="form-control"
                                value="<%= (editing && b.getStartsAt()!=null)? b.getStartsAt().toLocalDateTime().toString().replace(' ','T') : "" %>">
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">End Time</label>
                         <input type="datetime-local" name="ends_at" class="form-control"
                                value="<%= (editing && b.getEndsAt()!=null)? b.getEndsAt().toLocalDateTime().toString().replace(' ','T') : "" %>">
                     </div>
+
                 </div>
 
+                <!-- PREVIEW ẢNH -->
                 <div class="thumb-wrapper">
-                    <% String previewSrc = (editing && b.getImageUrl()!=null) ? b.getImageUrl() : ""; %>
                     <div>
                         <label class="form-label mb-2">Preview</label><br>
-                        <img id="preview" class="thumb" 
-                             src="<%= previewSrc %>" 
+                        <img id="preview" class="thumb"
+                             src="<%= previewSrc %>"
                              style="<%= previewSrc.isEmpty() ? "display:none;" : "" %>">
                     </div>
-
                 </div>
 
+                <!-- BUTTON -->
                 <div class="mt-4">
-                    <button class="btn btn-dark">💾 Save</button>
+                    <button class="btn btn-dark">Lưu</button>
                     <a href="BannerServlet" class="btn btn-secondary ms-2">Cancel</a>
                 </div>
+
             </form>
         </div>
 
-        <script src="assets/js/bootstrap.bundle.min.js"></script>
         <script>
-                                function previewFile(input) {
-                                    if (input.files && input.files[0]) {
-                                        const reader = new FileReader();
-                                        reader.onload = e => document.getElementById('preview').src = e.target.result;
-                                        reader.readAsDataURL(input.files[0]);
-                                    }
-                                }
-                                function previewFile(input) {
-                                    if (input.files && input.files[0]) {
-                                        const reader = new FileReader();
-                                        reader.onload = e => {
-                                            const img = document.getElementById('preview');
-                                            img.src = e.target.result;
-                                            img.style.display = 'block';
-                                        };
-                                        reader.readAsDataURL(input.files[0]);
-                                    }
-                                }
-
+            function previewFile(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = document.getElementById('preview');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
         </script>
+
+        <script src="assets/js/bootstrap.bundle.min.js"></script>
+
     </body>
 </html>

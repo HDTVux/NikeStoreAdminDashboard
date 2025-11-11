@@ -219,7 +219,7 @@
     <div class="images-list mt-3">
         <% if (images != null && !images.isEmpty()) for (ProductImage img : images) { %>
         <div class="img-box">
-            <img src="http://localhost/<%= img.getImageUrl() %>" class="<%= img.isMain() ? "main-img" : "" %>" onerror="this.src='assets/img/noimg.jpg'">
+            <img src="https://hdtvux.id.vn/<%= img.getImageUrl() %>" class="<%= img.isMain() ? "main-img" : "" %>" onerror="this.src='assets/img/noimg.jpg'">
             <div class="img-actions">
                 <% if (!img.isMain()) { %>
                     <a href="ProductServlet?action=image-main&imgId=<%=img.getId()%>&productId=<%=p.getId()%>" class="btn btn-sm btn-outline-success">Set Main</a>

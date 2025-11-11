@@ -11,6 +11,8 @@ import model.ProductVariant; // THÊM MODEL NÀY
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.*;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +50,7 @@ public class ProductServlet extends HttpServlet {
                 List<ProductVariant> variants = variantDao.getVariantsByProductId(editId); // LẤY VARIANTS
                 req.setAttribute("product", p);
                 req.setAttribute("images", images);
-                req.setAttribute("variants", variants); 
+                req.setAttribute("variants", variants);
                 req.setAttribute("categories", categories);
                 req.getRequestDispatcher("product_form.jsp").forward(req, resp);
                 break;
@@ -94,28 +96,87 @@ public class ProductServlet extends HttpServlet {
 
         String action = req.getParameter("action");
         if ("upload-image".equals(action)) {
+
             int productId = Integer.parseInt(req.getParameter("productId"));
             Part filePart = req.getPart("imageFile");
 
             if (filePart != null && filePart.getSize() > 0) {
-                String uploadsDir = "C:/xampp/htdocs/uploads/products/";
-                File uploadFolder = new File(uploadsDir);
-                if (!uploadFolder.exists()) {
-                    uploadFolder.mkdirs();
-                }
 
-                String fileName = UUID.randomUUID().toString().replace("-", "") + ".jpg";
-                Path filePath = Paths.get(uploadsDir, fileName);
-                try (InputStream input = filePart.getInputStream()) {
-                    Files.copy(input, filePath, StandardCopyOption.REPLACE_EXISTING);
-                }
+                try {
+                    String uploadUrl = "https://hdtvux.id.vn/upload_api/upload_image.php";
 
-                String relativePath = "uploads/products/" + fileName;
-                imgDao.insertImage(productId, relativePath, false);
+                    // đọc bytes từ file upload
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    InputStream is = filePart.getInputStream();
+                    byte[] buffer = new byte[4096];
+                    int read;
+                    while ((read = is.read(buffer)) != -1) {
+                        baos.write(buffer, 0, read);
+                    }
+                    byte[] fileBytes = baos.toByteArray();
+
+                    // tạo kết nối HTTP
+                    String boundary = "----" + UUID.randomUUID();
+                    HttpURLConnection conn = (HttpURLConnection) new URL(uploadUrl).openConnection();
+
+                    conn.setDoOutput(true);
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                    conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+                    DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+
+                    // ghi dữ liệu file
+                    dos.writeBytes("--" + boundary + "\r\n");
+                    dos.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"image.jpg\"\r\n");
+                    dos.writeBytes("Content-Type: image/jpeg\r\n\r\n");
+                    dos.write(fileBytes);
+                    dos.writeBytes("\r\n--" + boundary + "--\r\n");
+                    dos.flush();
+                    dos.close();
+
+                    int status = conn.getResponseCode();
+                    if (status != 200) {
+                        System.out.println("Upload failed, HTTP code: " + status);
+                        return;
+                    }
+
+                    // đọc response JSON
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    br.close();
+                    conn.disconnect();
+
+                    String json = sb.toString();
+                    json = json.replace("\\/", "/");
+                    String key = "uploads/products/";
+                    int start = json.indexOf(key);
+
+                    if (start != -1) {
+                        String relativePath = json.substring(start)
+                                .replace("\"}", "")
+                                .replace("\"", "")
+                                .trim();
+
+                        System.out.println("RELATIVE PATH = " + relativePath); // debug
+
+                        imgDao.insertImage(productId, relativePath, false);
+                    } else {
+                        System.out.println("❌ Không tìm thấy key uploads/products trong JSON: " + json);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
-            resp.sendRedirect("ProductServlet?action=edit&id=" + req.getParameter("productId"));
+            resp.sendRedirect("ProductServlet?action=edit&id=" + productId);
             return;
+
         }
 
         // ===== THÊM HOẶC CẬP NHẬT PRODUCT =====
@@ -146,7 +207,7 @@ public class ProductServlet extends HttpServlet {
         p.setSizeType(sizeType);
         p.setCategoryId(catId);
         p.setDescription(description);
-        
+
         if (idStr == null || idStr.isEmpty()) {
             // 🔹 Thêm mới
             int newId = dao.insertProductAndReturnId(p);

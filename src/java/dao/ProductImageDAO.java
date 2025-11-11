@@ -28,26 +28,85 @@ public class ProductImageDAO {
     }
 
     // Thêm ảnh mới
-    public void insertImage(int productId, String imageUrl, boolean isMain) {
+public void insertImage(int productId, String imageUrl, boolean isMain) {
+    try (Connection c = DBConnection.getConnection()) {
+
+        // Nếu sản phẩm chưa có ảnh nào → ảnh đầu tiên sẽ là main
+        String checkSql = "SELECT COUNT(*) FROM product_images WHERE product_id=?";
+        boolean hasImage = false;
+
+        try (PreparedStatement ps = c.prepareStatement(checkSql)) {
+            ps.setInt(1, productId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                hasImage = rs.getInt(1) > 0;
+            }
+        }
+
+        // Nếu chưa có ảnh, ép isMain = true
+        if (!hasImage) {
+            isMain = true;
+        }
+
+        // Thêm ảnh
         String sql = "INSERT INTO product_images (product_id, image_url, is_main) VALUES (?, ?, ?)";
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, productId);
             ps.setString(2, imageUrl);
             ps.setBoolean(3, isMain);
             ps.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
-    }
+        }
 
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
     // Xóa ảnh
-    public void deleteImage(int id) {
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM product_images WHERE id=?")) {
+public void deleteImage(int id) {
+    try (Connection c = DBConnection.getConnection()) {
+
+        // 1) Lấy thông tin ảnh trước khi xoá
+        String checkSql = "SELECT product_id, is_main FROM product_images WHERE id=?";
+        int productId = 0;
+        boolean wasMain = false;
+
+        try (PreparedStatement ps = c.prepareStatement(checkSql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                productId = rs.getInt("product_id");
+                wasMain = rs.getBoolean("is_main");
+            }
+        }
+
+        // 2) Xoá ảnh
+        try (PreparedStatement ps = c.prepareStatement("DELETE FROM product_images WHERE id=?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
-    }
+        }
 
+        // 3) Nếu ảnh bị xoá là ảnh main → set ảnh mới
+        if (wasMain) {
+            String sqlPickNew = "SELECT id FROM product_images WHERE product_id=? ORDER BY id DESC LIMIT 1";
+            int newMainId = 0;
+
+            try (PreparedStatement ps = c.prepareStatement(sqlPickNew)) {
+                ps.setInt(1, productId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    newMainId = rs.getInt("id");
+                }
+            }
+
+            if (newMainId != 0) {
+                setMainImage(productId, newMainId);
+            }
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
     // Đặt ảnh làm main
     public void setMainImage(int productId, int imgId) {
         try (Connection c = DBConnection.getConnection()) {

@@ -13,10 +13,7 @@ private Banner map(ResultSet rs) throws SQLException {
     b.setSubtitle(rs.getString("subtitle"));
 
     String relativePath = rs.getString("image_url");
-    if (relativePath != null && !relativePath.isBlank()) {
-        // ✅ tự nối prefix để JSP hiển thị được
-        b.setImageUrl("http://localhost/" + relativePath);
-    }
+    b.setImageUrl(relativePath);  // ✅ giữ nguyên
 
     b.setDeeplink(rs.getString("deeplink"));
     b.setSortOrder((Integer) rs.getObject("sort_order"));
